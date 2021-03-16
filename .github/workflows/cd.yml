@@ -20,13 +20,13 @@ jobs:
       BUILD_SHA: null
       ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
     steps:
-      - name: Checkout Target
+      - name: Checkout target
         uses: actions/checkout@v2
         with:
           path: ${{ env.TARGET_DIR }}
           fetch-depth: 0
 
-      - name: Checkout Source
+      - name: Checkout source
         uses: actions/checkout@v2
         with:
           repository: ${{ env.SOURCE_REPOSITORY }}
@@ -34,15 +34,15 @@ jobs:
           token: ${{ env.ACCESS_TOKEN }}
           path: ${{ env.SOURCE_DIR }}
 
-      - name: Build Source
+      - name: Build source
         run: |
           # Enter source directory
           cd "${GITHUB_WORKSPACE}/${SOURCE_DIR}"
-          BUILD_SHA=$(git rev-parse --short HEAD)
+          export BUILD_SHA=$(git rev-parse --short HEAD)
           npm install --silent
           npm run-script build
 
-      - name: Commit to Target
+      - name: Commit to target
         run: |
           # Enter target_DIR directory
           cd "${GITHUB_WORKSPACE}/${TARGET_DIR}"
