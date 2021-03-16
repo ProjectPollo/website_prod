@@ -1,0 +1,59 @@
+name: CD
+
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_REPOSITORY: ProjectPollo/gatsby-website
+      SOURCE_BRANCH: master
+      TARGET_BRANCH: gh-pages
+      SOURCE_DIR: source
+      TARGET_DIR: target
+      BUILD_DIR: public
+      BUILD_SHA: null
+      ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+    steps:
+      - name: Checkout Target
+        uses: actions/checkout@v2
+        with:
+          path: ${{ env.TARGET_DIR }}
+          fetch-depth: 0
+
+      - name: Checkout Source
+        uses: actions/checkout@v2
+        with:
+          repository: ${{ env.SOURCE_REPOSITORY }}
+          ref: ${{ env.SOURCE_BRANCH }}
+          token: ${{ env.ACCESS_TOKEN }}
+          path: ${{ env.SOURCE_DIR }}
+
+      - name: Build Source
+        run: |
+          # Enter source directory
+          cd "${GITHUB_WORKSPACE}/${SOURCE_DIR}"
+          BUILD_SHA=$(git rev-parse --short HEAD)
+          npm install --silent
+          npm run-script build
+
+      - name: Commit to Target
+        run: |
+          # Enter target_DIR directory
+          cd "${GITHUB_WORKSPACE}/${TARGET_DIR}"
+          # Configure git
+          git config --global user.name "$GITHUB_ACTOR"
+          git config --global user.email "${GITHUB_ACTOR}@bots.github.com"
+          git checkout "$TARGET_BRANCH"
+          # Clear target_DIR and copy source_DIR
+          rm -rf *
+          mv "${GITHUB_WORKSPACE}/${SOURCE_DIR}/${BUILD_DIR}"/* .  
+          # Add changes
+          git add .
+          git commit -m "Deploying from @ ${BUILD_SHA} 🚀"
+          git push 
