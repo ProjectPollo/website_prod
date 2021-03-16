@@ -1,10 +1,6 @@
 name: CD
 
 on:
-  push:
-    branches:
-      - master
-
   workflow_dispatch:
 
 jobs:
@@ -47,11 +43,12 @@ jobs:
           # Configure git
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "${GITHUB_ACTOR}@bots.github.com"
-          # Copy source
+          # Wipe everything and copy build
+          git checkout "$TARGET_BRANCH"
+          rm -rf *
           mv -f "${GITHUB_WORKSPACE}/${SOURCE_DIR}/${BUILD_DIR}"/* .
           BUILD_SHA=$(git -C "${GITHUB_WORKSPACE}/${SOURCE_DIR}" rev-parse --short HEAD) 
           # Add changes
-          git checkout "$TARGET_BRANCH"
           git add .
           git commit -m "Deploying from @ ${BUILD_SHA} 🚀"
           git push 
