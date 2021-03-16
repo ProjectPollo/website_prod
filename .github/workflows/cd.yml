@@ -17,7 +17,6 @@ jobs:
       SOURCE_DIR: source
       TARGET_DIR: target
       BUILD_DIR: public
-      BUILD_SHA: null
       ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
     steps:
       - name: Checkout target
@@ -38,21 +37,21 @@ jobs:
         run: |
           # Enter source directory
           cd "${GITHUB_WORKSPACE}/${SOURCE_DIR}"
-          export BUILD_SHA=$(git rev-parse --short HEAD)
           npm install --silent
           npm run-script build
 
       - name: Commit to target
         run: |
-          # Enter target_DIR directory
+          # Enter target directory
           cd "${GITHUB_WORKSPACE}/${TARGET_DIR}"
           # Configure git
           git config --global user.name "$GITHUB_ACTOR"
           git config --global user.email "${GITHUB_ACTOR}@bots.github.com"
+          # Clear target and copy source
           git checkout "$TARGET_BRANCH"
-          # Clear target_DIR and copy source_DIR
           rm -rf *
-          mv "${GITHUB_WORKSPACE}/${SOURCE_DIR}/${BUILD_DIR}"/* .  
+          mv "${GITHUB_WORKSPACE}/${SOURCE_DIR}/${BUILD_DIR}"/* .
+          BUILD_SHA=$(git -C "${GITHUB_WORKSPACE}/${SOURCE_DIR}" rev-parse --short HEAD) 
           # Add changes
           git add .
           git commit -m "Deploying from @ ${BUILD_SHA} 🚀"
